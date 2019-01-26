@@ -78,7 +78,10 @@ type LV2PluginConfig struct {
 // New allocate new host config (usually for purposes
 // of setting up its value map parameters)
 func New() *LV2HostConfig {
-	return &LV2HostConfig{}
+	return &LV2HostConfig{
+		[]LV2PluginConfig{},
+		map[string]float32{},
+	}
 }
 
 func getFloat32(val interface{}) (float32, error) {
