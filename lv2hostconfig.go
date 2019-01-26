@@ -57,11 +57,14 @@ func writeConfig(hostRaw *lv2HostRaw, file string) error {
 }
 
 // LV2HostConfig is main config structure containing
-// plugin configuration, as well as plugin value map,
-// to map runtime variable names to values in config
+// plugin configuration. In addition, it also contains
+// a parameter map (untyped), as well as govaluate
+// expression function map, to enable evaluating arbitrary
+// functions as part of config parsing.
 type LV2HostConfig struct {
-	Plugins  []LV2PluginConfig
-	ValueMap map[string]float32
+	Plugins     []LV2PluginConfig
+	ValueMap    map[string]interface{}
+	FunctionMap map[string]govaluate.ExpressionFunction
 }
 
 // LV2PluginConfig is plugin config structure. Use
@@ -93,7 +96,8 @@ func newLV2PluginRaw() lv2PluginRaw {
 func NewLV2HostConfig() *LV2HostConfig {
 	return &LV2HostConfig{
 		make([]LV2PluginConfig, 0),
-		make(map[string]float32),
+		make(map[string]interface{}),
+		make(map[string]govaluate.ExpressionFunction),
 	}
 }
 
@@ -129,14 +133,6 @@ func (c *LV2HostConfig) ParseFile(file string) error {
 	pcs := make([]LV2PluginConfig, 0)
 
 	// use govaluate to parse our values
-
-	// create parameter map for govaluate
-	paramMap := make(map[string]interface{})
-	for k, v := range c.ValueMap {
-		paramMap[k] = v
-	}
-
-	// now, iterate over each config entry and evaluate it
 	for _, rpd := range raw.Plugins {
 		pc := NewLV2PluginConfig()
 
@@ -155,11 +151,11 @@ func (c *LV2HostConfig) ParseFile(file string) error {
 				continue
 			}
 			// expression failed to parse, so evaluate it
-			expr, err := govaluate.NewEvaluableExpression(value)
+			expr, err := govaluate.NewEvaluableExpressionWithFunctions(value, c.FunctionMap)
 			if err != nil {
 				return fmt.Errorf("Error parsing expression '%v': %v", value, err)
 			}
-			evalResult, err := expr.Evaluate(paramMap)
+			evalResult, err := expr.Evaluate(c.ValueMap)
 			if err != nil {
 				return fmt.Errorf("Error evaluating expression '%v': %v", value, err)
 			}
