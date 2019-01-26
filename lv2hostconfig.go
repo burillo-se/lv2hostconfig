@@ -85,8 +85,8 @@ func NewLV2HostConfig() *LV2HostConfig {
 }
 
 // NewLV2PluginConfig allocate new plugin config
-func NewLV2PluginConfig() *LV2PluginConfig {
-	return &LV2PluginConfig{
+func NewLV2PluginConfig() LV2PluginConfig {
+	return LV2PluginConfig{
 		"",
 		make(map[string]float32),
 		make(map[string]string),
