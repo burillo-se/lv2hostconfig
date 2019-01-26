@@ -20,14 +20,14 @@ import (
 // value of 'v' was set to 3).
 // This is the first stage: the raw text form.
 type lv2HostRaw struct {
-	plugins []lv2PluginRaw `yaml:"plugins"`
+	Plugins []lv2PluginRaw `yaml:"plugins"`
 }
 
 // LV2PluginRaw is the raw parsed data from a
 // YAML config file.
 type lv2PluginRaw struct {
-	uri  string            `yaml:"pluginUri"`
-	data map[string]string `yaml:"parameters"`
+	URI  string            `yaml:"pluginUri"`
+	Data map[string]string `yaml:"parameters"`
 }
 
 func readConfig(file string) (*lv2HostRaw, error) {
@@ -45,7 +45,7 @@ func readConfig(file string) (*lv2HostRaw, error) {
 }
 
 func writeConfig(hostRaw *lv2HostRaw, file string) error {
-	d, err := yaml.Marshal(*hostRaw)
+	d, err := yaml.Marshal(hostRaw)
 	if err != nil {
 		return fmt.Errorf("Failed to serialize config: %v", err)
 	}
@@ -83,8 +83,8 @@ func newLV2HostRaw() *lv2HostRaw {
 
 func newLV2PluginRaw() lv2PluginRaw {
 	return lv2PluginRaw{
-		uri:  "",
-		data: make(map[string]string),
+		"",
+		make(map[string]string),
 	}
 }
 
@@ -137,12 +137,12 @@ func (c *LV2HostConfig) ParseFile(file string) error {
 	}
 
 	// now, iterate over each config entry and evaluate it
-	for _, rpd := range raw.plugins {
+	for _, rpd := range raw.Plugins {
 		pc := NewLV2PluginConfig()
 
-		uri := rpd.uri
+		uri := rpd.URI
 
-		for param, value := range rpd.data {
+		for param, value := range rpd.Data {
 			pc.PluginURI = uri
 
 			// if we can parse value as float, there is no expression
@@ -150,6 +150,8 @@ func (c *LV2HostConfig) ParseFile(file string) error {
 			if err == nil {
 				pc.Data[param] = float32(result64)
 				pc.DataFmt[param] = ""
+
+				pcs = append(pcs, pc)
 				continue
 			}
 			// expression failed to parse, so evaluate it
@@ -193,15 +195,15 @@ func (c *LV2HostConfig) WriteToFile(file string) error {
 
 	for _, pcfg := range c.Plugins {
 		rawp := newLV2PluginRaw()
-		rawp.uri = pcfg.PluginURI
+		rawp.URI = pcfg.PluginURI
 		for k, v := range pcfg.Data {
 			if pcfg.DataFmt[k] == "" {
-				rawp.data[k] = fmt.Sprintf("%f", v)
+				rawp.Data[k] = fmt.Sprintf("%f", v)
 			} else {
-				rawp.data[k] = pcfg.DataFmt[k]
+				rawp.Data[k] = pcfg.DataFmt[k]
 			}
 		}
-		raw.plugins = append(raw.plugins, rawp)
+		raw.Plugins = append(raw.Plugins, rawp)
 	}
 
 	return writeConfig(raw, file)
