@@ -126,7 +126,7 @@ func (c *LV2HostConfig) ParseFile(file string) error {
 	}
 
 	// parsing should be atomic, so operate on a copy
-	var pcs []LV2PluginConfig
+	pcs := make([]LV2PluginConfig, 0)
 
 	// use govaluate to parse our values
 
