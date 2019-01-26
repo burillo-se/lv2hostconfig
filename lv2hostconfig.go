@@ -79,8 +79,8 @@ type LV2PluginConfig struct {
 // of setting up its value map parameters)
 func New() *LV2HostConfig {
 	return &LV2HostConfig{
-		[]LV2PluginConfig{},
-		map[string]float32{},
+		make([]LV2PluginConfig, 0),
+		make(map[string]float32),
 	}
 }
 
