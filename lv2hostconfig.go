@@ -75,12 +75,21 @@ type LV2PluginConfig struct {
 	DataFmt   map[string]string
 }
 
-// New allocate new host config (usually for purposes
-// of setting up its value map parameters)
-func New() *LV2HostConfig {
+// NewLV2HostConfig allocate new host config (usually
+// for purposes of setting up its value map parameters)
+func NewLV2HostConfig() *LV2HostConfig {
 	return &LV2HostConfig{
 		make([]LV2PluginConfig, 0),
 		make(map[string]float32),
+	}
+}
+
+// NewLV2PluginConfig allocate new plugin config
+func NewLV2PluginConfig() *LV2PluginConfig {
+	return &LV2PluginConfig{
+		"",
+		make(map[string]float32),
+		make(map[string]string),
 	}
 }
 
