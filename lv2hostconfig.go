@@ -75,6 +75,19 @@ type LV2PluginConfig struct {
 	DataFmt   map[string]string
 }
 
+func newLV2HostRaw() *lv2HostRaw {
+	return &lv2HostRaw{
+		make([]lv2PluginRaw, 0),
+	}
+}
+
+func newLV2PluginRaw() lv2PluginRaw {
+	return lv2PluginRaw{
+		uri:  "",
+		data: make(map[string]string),
+	}
+}
+
 // NewLV2HostConfig allocate new host config (usually
 // for purposes of setting up its value map parameters)
 func NewLV2HostConfig() *LV2HostConfig {
@@ -125,7 +138,7 @@ func (c *LV2HostConfig) ParseFile(file string) error {
 
 	// now, iterate over each config entry and evaluate it
 	for _, rpd := range raw.plugins {
-		var pc LV2PluginConfig
+		pc := NewLV2PluginConfig()
 
 		uri := rpd.uri
 
@@ -176,12 +189,11 @@ func (c *LV2HostConfig) ParseFile(file string) error {
 // unless DataFmt was changed. Any value that has DataFmt
 // as empty string, will be treated as not formatted.
 func (c *LV2HostConfig) WriteToFile(file string) error {
-	raw := lv2HostRaw{}
+	raw := newLV2HostRaw()
 
 	for _, pcfg := range c.Plugins {
-		rawp := lv2PluginRaw{
-			uri: pcfg.PluginURI,
-		}
+		rawp := newLV2PluginRaw()
+		rawp.uri = pcfg.PluginURI
 		for k, v := range pcfg.Data {
 			if pcfg.DataFmt[k] == "" {
 				rawp.data[k] = fmt.Sprintf("%f", v)
@@ -192,5 +204,5 @@ func (c *LV2HostConfig) WriteToFile(file string) error {
 		raw.plugins = append(raw.plugins, rawp)
 	}
 
-	return writeConfig(&raw, file)
+	return writeConfig(raw, file)
 }
