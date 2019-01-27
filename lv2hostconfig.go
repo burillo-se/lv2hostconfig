@@ -138,8 +138,9 @@ func (c *LV2HostConfig) ParseFile(file string) error {
 
 		uri := rpd.URI
 
+		pc.PluginURI = uri
+
 		for param, value := range rpd.Data {
-			pc.PluginURI = uri
 
 			// if we can parse value as float, there is no expression
 			result64, err := strconv.ParseFloat(value, 32)
@@ -168,8 +169,8 @@ func (c *LV2HostConfig) ParseFile(file string) error {
 			pc.Data[param] = result32
 			pc.DataFmt[param] = value
 
-			pcs = append(pcs, pc)
 		}
+		pcs = append(pcs, pc)
 	}
 
 	// we're successfully parsed plugin data, so clear current contents
