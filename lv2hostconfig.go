@@ -91,14 +91,115 @@ func newLV2PluginRaw() lv2PluginRaw {
 	}
 }
 
+func dbToLinear(db float32) float32 {
+	return float32(math.Pow(10, float64(db)/20.0))
+}
+
+func linearToDb(linear float32) float32 {
+	if linear != 0 {
+		return 20 * float32(math.Log10(float64(linear)))
+	}
+	return -144
+}
+
+func getFloat(val interface{}) (float32, error) {
+	floatType := reflect.TypeOf(float32(0))
+	stringType := reflect.TypeOf("")
+	v := reflect.ValueOf(val)
+	v = reflect.Indirect(v)
+	if v.Type().ConvertibleTo(floatType) {
+		fv := v.Convert(floatType)
+		return float32(fv.Float()), nil
+	} else if v.Type().ConvertibleTo(stringType) {
+		sv := v.Convert(stringType)
+		s := sv.String()
+		f64, err := strconv.ParseFloat(s, 32)
+		if err != nil {
+			return float32(math.NaN()), err
+		}
+		return float32(f64), nil
+	} else {
+		return float32(math.NaN()), fmt.Errorf("Can't convert %v to float", v.Type())
+	}
+}
+
+func setUpLV2HostConfigFuncs(lvc *LV2HostConfig) {
+	lvc.FunctionMap["linear"] = func(args ...interface{}) (interface{}, error) {
+		db, err := getFloat(args[0])
+		if err != nil {
+			return math.NaN(), fmt.Errorf("Value '%v' was not a float", args[0])
+		}
+		return dbToLinear(db), nil
+	}
+	lvc.FunctionMap["decibel"] = func(args ...interface{}) (interface{}, error) {
+		linear, err := getFloat(args[0])
+		if err != nil {
+			return math.NaN(), fmt.Errorf("Value '%v' was not a float", args[0])
+		}
+		return linearToDb(linear), nil
+	}
+	lvc.FunctionMap["min"] = func(args ...interface{}) (interface{}, error) {
+		a, err := getFloat(args[0])
+		if err != nil {
+			return math.NaN(), fmt.Errorf("Value '%v' was not a float", args[0])
+		}
+		b, err := getFloat(args[1])
+		if err != nil {
+			return math.NaN(), fmt.Errorf("Value '%v' was not a float", args[0])
+		}
+		return math.Min(float64(a), float64(b)), nil
+	}
+	lvc.FunctionMap["max"] = func(args ...interface{}) (interface{}, error) {
+		a, err := getFloat(args[0])
+		if err != nil {
+			return math.NaN(), fmt.Errorf("Value '%v' was not a float", args[0])
+		}
+		b, err := getFloat(args[1])
+		if err != nil {
+			return math.NaN(), fmt.Errorf("Value '%v' was not a float", args[0])
+		}
+		return math.Max(float64(a), float64(b)), nil
+	}
+	lvc.FunctionMap["abs"] = func(args ...interface{}) (interface{}, error) {
+		v, err := getFloat(args[0])
+		if err != nil {
+			return math.NaN(), fmt.Errorf("Value '%v' was not a float", args[0])
+		}
+		return math.Abs(float64(v)), nil
+	}
+	lvc.FunctionMap["sqrt"] = func(args ...interface{}) (interface{}, error) {
+		v, err := getFloat(args[0])
+		if err != nil {
+			return math.NaN(), fmt.Errorf("Value '%v' was not a float", args[0])
+		}
+		return math.Sqrt(float64(v)), nil
+	}
+	lvc.FunctionMap["pow"] = func(args ...interface{}) (interface{}, error) {
+		a, err := getFloat(args[0])
+		if err != nil {
+			return math.NaN(), fmt.Errorf("Value '%v' was not a float", args[0])
+		}
+		b, err := getFloat(args[1])
+		if err != nil {
+			return math.NaN(), fmt.Errorf("Value '%v' was not a float", args[0])
+		}
+		return math.Pow(float64(a), float64(b)), nil
+	}
+}
+
 // NewLV2HostConfig allocate new host config (usually
 // for purposes of setting up its value map parameters)
 func NewLV2HostConfig() *LV2HostConfig {
-	return &LV2HostConfig{
+	lvc := LV2HostConfig{
 		make([]LV2PluginConfig, 0),
 		make(map[string]interface{}),
 		make(map[string]govaluate.ExpressionFunction),
 	}
+
+	// set up standard functions
+	setUpLV2HostConfigFuncs(&lvc)
+
+	return &lvc
 }
 
 // NewLV2PluginConfig allocate new plugin config
