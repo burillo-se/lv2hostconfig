@@ -206,6 +206,38 @@ func setUpLV2HostConfigFuncs(lvc *LV2HostConfig) {
 		}
 		return math.Pow(float64(a), float64(b)), nil
 	}
+	lvc.FunctionMap["scale"] = func(args ...interface{}) (interface{}, error) {
+		if len(args) != 5 {
+			return math.NaN(), fmt.Errorf("Function 'scale' expects exactly 5 arguments")
+		}
+		// where is Python when you need it...
+		var val, oldMin, oldMax, newMin, newMax float32
+		floatPtrs := []*float32{&val, &oldMin, &oldMax, &newMin, &newMax}
+
+		for i, arg := range args {
+			val, err := getFloat(arg)
+			if err != nil {
+				return math.NaN(), fmt.Errorf("Value '%v' was not a float", arg)
+			}
+			*floatPtrs[i] = val
+		}
+		if oldMin >= oldMax {
+			return math.NaN(), fmt.Errorf("Range '%v-%v' is invalid", oldMin, oldMax)
+		}
+		if newMin >= newMax {
+			return math.NaN(), fmt.Errorf("Range '%v-%v' is invalid", newMin, newMax)
+		}
+		if val < oldMin || val > oldMax {
+			return math.NaN(), fmt.Errorf("Value '%v' is not within range '%v-%v'", val, oldMin, oldMax)
+		}
+		oldScale := oldMax - oldMin
+		newScale := newMax - newMin
+		oldScaledVal := (val - oldMin) / oldScale
+		newScaledVal := newScale * oldScaledVal
+		newVal := newScaledVal + newMin
+
+		return newVal, nil
+	}
 }
 
 // NewLV2HostConfig allocate new host config (usually

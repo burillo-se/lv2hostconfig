@@ -59,6 +59,8 @@ List of utility functions provided is as follows:
 -   decibel(value) - will convert a float value to decibels
 -   linear(value) - will convert a decibel value to float
 -   min(a, b), max(a, b), abs(a), sqrt(a), pow(a, b) - self-explanatory
+-   scale(val, orig_min, orig_max, new_min, new_max) - scale value `val` from range `orig_min`-`orig_max` to
+    fit into the new range `new_min`-`new_max`
 
 Keep in mind that while you're allowed to modify values inside the config and even write it out, any formatted
 values will *not* have their changed values reflected in the resulting YAML. So, if your initial parameter value
