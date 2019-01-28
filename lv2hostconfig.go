@@ -302,7 +302,6 @@ func (c *LV2HostConfig) ParseFile(file string) error {
 				pc.Data[param] = float32(result64)
 				pc.DataFmt[param] = ""
 
-				pcs = append(pcs, pc)
 				continue
 			}
 			// expression failed to parse, so evaluate it
