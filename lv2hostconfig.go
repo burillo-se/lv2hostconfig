@@ -125,6 +125,9 @@ func getFloat(val interface{}) (float32, error) {
 
 func setUpLV2HostConfigFuncs(lvc *LV2HostConfig) {
 	lvc.FunctionMap["linear"] = func(args ...interface{}) (interface{}, error) {
+		if len(args) != 1 {
+			return math.NaN(), fmt.Errorf("Function 'linear' expects exactly 1 argument")
+		}
 		db, err := getFloat(args[0])
 		if err != nil {
 			return math.NaN(), fmt.Errorf("Value '%v' was not a float", args[0])
@@ -132,6 +135,9 @@ func setUpLV2HostConfigFuncs(lvc *LV2HostConfig) {
 		return dbToLinear(db), nil
 	}
 	lvc.FunctionMap["decibel"] = func(args ...interface{}) (interface{}, error) {
+		if len(args) != 1 {
+			return math.NaN(), fmt.Errorf("Function 'decibel' expects exactly 1 argument")
+		}
 		linear, err := getFloat(args[0])
 		if err != nil {
 			return math.NaN(), fmt.Errorf("Value '%v' was not a float", args[0])
@@ -139,6 +145,9 @@ func setUpLV2HostConfigFuncs(lvc *LV2HostConfig) {
 		return linearToDb(linear), nil
 	}
 	lvc.FunctionMap["min"] = func(args ...interface{}) (interface{}, error) {
+		if len(args) != 2 {
+			return math.NaN(), fmt.Errorf("Function 'min' expects exactly 2 arguments")
+		}
 		a, err := getFloat(args[0])
 		if err != nil {
 			return math.NaN(), fmt.Errorf("Value '%v' was not a float", args[0])
@@ -150,6 +159,9 @@ func setUpLV2HostConfigFuncs(lvc *LV2HostConfig) {
 		return math.Min(float64(a), float64(b)), nil
 	}
 	lvc.FunctionMap["max"] = func(args ...interface{}) (interface{}, error) {
+		if len(args) != 2 {
+			return math.NaN(), fmt.Errorf("Function 'max' expects exactly 2 arguments")
+		}
 		a, err := getFloat(args[0])
 		if err != nil {
 			return math.NaN(), fmt.Errorf("Value '%v' was not a float", args[0])
@@ -161,6 +173,9 @@ func setUpLV2HostConfigFuncs(lvc *LV2HostConfig) {
 		return math.Max(float64(a), float64(b)), nil
 	}
 	lvc.FunctionMap["abs"] = func(args ...interface{}) (interface{}, error) {
+		if len(args) != 1 {
+			return math.NaN(), fmt.Errorf("Function 'abs' expects exactly 1 argument")
+		}
 		v, err := getFloat(args[0])
 		if err != nil {
 			return math.NaN(), fmt.Errorf("Value '%v' was not a float", args[0])
@@ -168,6 +183,9 @@ func setUpLV2HostConfigFuncs(lvc *LV2HostConfig) {
 		return math.Abs(float64(v)), nil
 	}
 	lvc.FunctionMap["sqrt"] = func(args ...interface{}) (interface{}, error) {
+		if len(args) != 1 {
+			return math.NaN(), fmt.Errorf("Function 'sqrt' expects exactly 1 argument")
+		}
 		v, err := getFloat(args[0])
 		if err != nil {
 			return math.NaN(), fmt.Errorf("Value '%v' was not a float", args[0])
@@ -175,6 +193,9 @@ func setUpLV2HostConfigFuncs(lvc *LV2HostConfig) {
 		return math.Sqrt(float64(v)), nil
 	}
 	lvc.FunctionMap["pow"] = func(args ...interface{}) (interface{}, error) {
+		if len(args) != 2 {
+			return math.NaN(), fmt.Errorf("Function 'pow' expects exactly 2 arguments")
+		}
 		a, err := getFloat(args[0])
 		if err != nil {
 			return math.NaN(), fmt.Errorf("Value '%v' was not a float", args[0])
