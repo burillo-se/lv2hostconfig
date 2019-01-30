@@ -20,7 +20,7 @@ import (
 // value of 'v' was set to 3).
 // This is the first stage: the raw text form.
 type lv2HostRaw struct {
-	Reference float32        `yaml:"referenceLevel`
+	Reference float32        `yaml:"referenceLevel"`
 	Plugins   []lv2PluginRaw `yaml:"plugins"`
 }
 
