@@ -20,7 +20,8 @@ import (
 // value of 'v' was set to 3).
 // This is the first stage: the raw text form.
 type lv2HostRaw struct {
-	Plugins []lv2PluginRaw `yaml:"plugins"`
+	Reference float32        `yaml:"referenceLevel`
+	Plugins   []lv2PluginRaw `yaml:"plugins"`
 }
 
 // LV2PluginRaw is the raw parsed data from a
@@ -80,6 +81,7 @@ type LV2PluginConfig struct {
 
 func newLV2HostRaw() *lv2HostRaw {
 	return &lv2HostRaw{
+		0,
 		make([]lv2PluginRaw, 0),
 	}
 }
@@ -304,6 +306,7 @@ func (c *LV2HostConfig) ReadFile(file string) error {
 	// we're successfully parsed plugin data, so clear current contents
 	// and overwrite them with parsed data
 	c.Plugins = pcs
+	c.ValueMap["reference"] = raw.Reference
 
 	return nil
 }
