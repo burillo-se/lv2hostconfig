@@ -275,9 +275,10 @@ func getFloat32(val interface{}) (float32, error) {
 	return float32(fv.Float()), nil
 }
 
-// ParseFile parses a specified config file, using
-// mapped values.
-func (c *LV2HostConfig) ParseFile(file string) error {
+// ReadFile will read a YAML config into an LV2HostConfig
+// data structure. Note that any Data fields will not be
+// initialized until Evaluate is called.
+func (c *LV2HostConfig) ReadFile(file string) error {
 	raw, err := readConfig(file)
 	if err != nil {
 		return err
@@ -286,7 +287,7 @@ func (c *LV2HostConfig) ParseFile(file string) error {
 	// parsing should be atomic, so operate on a copy
 	pcs := make([]LV2PluginConfig, 0)
 
-	// use govaluate to parse our values
+	// read raw string values into DataFmt
 	for _, rpd := range raw.Plugins {
 		pc := NewLV2PluginConfig()
 
@@ -295,13 +296,40 @@ func (c *LV2HostConfig) ParseFile(file string) error {
 		pc.PluginURI = uri
 
 		for param, value := range rpd.Data {
+			pc.DataFmt[param] = value
+		}
+		pcs = append(pcs, pc)
+	}
+
+	// we're successfully parsed plugin data, so clear current contents
+	// and overwrite them with parsed data
+	c.Plugins = pcs
+
+	return nil
+}
+
+// Evaluate uses govaluate to (re-)parse contents of
+// config structure into actual values.
+func (c *LV2HostConfig) Evaluate() error {
+	// parsing should be atomic, so operate on a copy
+	pcs := make([]LV2PluginConfig, 0)
+
+	// use govaluate to parse our values
+	for _, pd := range c.Plugins {
+		pc := NewLV2PluginConfig()
+
+		uri := pd.PluginURI
+
+		pc.PluginURI = uri
+
+		for param, value := range pd.DataFmt {
+			// keep current DataFmt to enable future re-parsing
+			pc.DataFmt[param] = value
 
 			// if we can parse value as float, there is no expression
 			result64, err := strconv.ParseFloat(value, 32)
 			if err == nil {
 				pc.Data[param] = float32(result64)
-				pc.DataFmt[param] = ""
-
 				continue
 			}
 			// expression failed to parse, so evaluate it
@@ -320,9 +348,8 @@ func (c *LV2HostConfig) ParseFile(file string) error {
 				return fmt.Errorf("Error parsing expression '%v' result: %v", value, err)
 			}
 			pc.Data[param] = result32
-			pc.DataFmt[param] = value
-
 		}
+
 		pcs = append(pcs, pc)
 	}
 
@@ -334,24 +361,18 @@ func (c *LV2HostConfig) ParseFile(file string) error {
 }
 
 // WriteToFile will write LV2HostConfig data back into
-// YAML form. Note that for any formatted values, Data
-// contents is not dumped into YAML - DataFmt is dumped
-// instead. Therefore, for formatted values, any changes
+// YAML form. Note that Data contents is not dumped into
+// YAML - DataFmt is dumped instead. Therefore, any changes
 // to Data values will not be reflected in the YAML file
-// unless DataFmt was changed. Any value that has DataFmt
-// as empty string, will be treated as not formatted.
+// unless DataFmt was changed accordingly.
 func (c *LV2HostConfig) WriteToFile(file string) error {
 	raw := newLV2HostRaw()
 
 	for _, pcfg := range c.Plugins {
 		rawp := newLV2PluginRaw()
 		rawp.URI = pcfg.PluginURI
-		for k, v := range pcfg.Data {
-			if pcfg.DataFmt[k] == "" {
-				rawp.Data[k] = fmt.Sprintf("%f", v)
-			} else {
-				rawp.Data[k] = pcfg.DataFmt[k]
-			}
+		for k, v := range pcfg.DataFmt {
+			rawp.Data[k] = v
 		}
 		raw.Plugins = append(raw.Plugins, rawp)
 	}
